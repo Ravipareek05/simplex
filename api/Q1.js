@@ -1,8 +1,5 @@
 export default function handler(req, res) {
-  // Tells Vercel to serve this as plain text for MATLAB to read
   res.setHeader('Content-Type', 'text/plain');
-  
-  // The MATLAB code is inside the backticks (` `)
   res.status(200).send(`
 clc
 clear all
@@ -14,21 +11,19 @@ b = [10; 6; 2];
 
 s = eye(m);                 
 A = [info s b];             
-
+% Ensure Cost covers decision variables + slack variables
 Cost = zeros(1, size(A,2)-1); 
 Cost(1:n) = C;              
 BV = n+1 : n+m;             
 
 ZRow = Cost(BV) * A - [Cost 0]; 
-
 Run = true;
+
 while Run
     ZC = ZRow(1:end-1);     
     
-    % --- CHANGED FOR MINIMIZATION ---
-    if any(ZC > 0)          
-        [~, Pvt_Col] = max(ZC);
-    % --------------------------------
+    if any(ZC < 0)          
+        [~, Pvt_Col] = min(ZC);
         
         sol = A(:, end);
         column = A(:, Pvt_Col);
@@ -56,6 +51,7 @@ while Run
             end
         end
         
+        % Consistent ZRow update
         ZRow = ZRow - ZRow(Pvt_Col) * A(Pvt_Row, :);
         
     else
@@ -70,6 +66,6 @@ OptimalValue = ZRow(end);
 
 fprintf('\\nFinal Basic Feasible Solution:\\n');
 disp(Final_BFS);
-fprintf('Optimal Objective Value: %0.4f\\n', OptimalValue);
+fprintf('Optimal Objective Value: %0.4f\\n', OptimalValue); 
   `);
 }
