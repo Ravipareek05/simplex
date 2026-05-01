@@ -14,19 +14,20 @@ b = [10; 6; 2];
 
 s = eye(m);                 
 A = [info s b];             
-Cost = zeros(1, size(A,2));
+
+
+Cost = zeros(1, size(A,2)-1); 
 Cost(1:n) = C;              
 BV = n+1 : n+m;             
 
-ZRow = Cost(BV)*A - [Cost 0]; 
-Run = true;
 
+ZRow = Cost(BV) * A - [Cost 0]; 
+
+Run = true;
 while Run
     ZC = ZRow(1:end-1);     
     
     if any(ZC < 0)          
-        fprintf('Not Optimal. Pivoting...\\n');
-        
         [~, Pvt_Col] = min(ZC);
         
         sol = A(:, end);
@@ -55,11 +56,12 @@ while Run
             end
         end
         
+       
         ZRow = ZRow - ZRow(Pvt_Col) * A(Pvt_Row, :);
         
     else
         Run = false;
-        fprintf('Optimal Solution Reached.\\n');
+        fprintf('Optimal Solution Reached.\n');
     end
 end
 
@@ -67,8 +69,9 @@ Final_BFS = zeros(1, size(A, 2) - 1);
 Final_BFS(BV) = A(:, end);
 OptimalValue = ZRow(end);
 
-fprintf('\\nFinal Basic Feasible Solution:\\n');
+fprintf('\nFinal Basic Feasible Solution:\n');
 disp(Final_BFS);
-fprintf('Optimal Objective Value: %0.4f\\n', OptimalValue);
+fprintf('Optimal Objective Value: %0.4f\n', OptimalValue);
+
   `);
 }
