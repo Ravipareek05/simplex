@@ -5,6 +5,9 @@ export default function handler(req, res) {
                  FORENSIC COMMAND TOOLBOX
 ============================================================
 
+--- Interactive Data Recovery ---
+[testdisk] sudo testdisk image.dd (Create log > Analyze > Quick search)
+
 --- Integrity & Partition Layout ---
 [1] md5sum image.dd > image.md5
 [2] img_stat image.dd
