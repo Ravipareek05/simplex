@@ -1,71 +1,29 @@
 export default function handler(req, res) {
-  res.setHeader('Content-Type', 'text/plain');
-  res.status(200).send(`
-clc
-clear all
+    const { q, search, path } = req.query;
 
-C = [2 1 0];                
-info = [1 2 1; 1 1 5; 1 -1 3]; 
-b = [10; 6; 2];             
-[m, n] = size(info);
+    const commands = {
+        "1": "md5sum image.dd > image.md5",
+        "2": "img_stat image.dd",
+        "3": "mmstat image.dd",
+        "4": "mmls image.dd (to see offset)",
+        "5": "fsstat -o <offset> image1.dd",
+        "6": "fls -o <offset> image1.dd (* are deleted)",
+        "7": "fls -d -o <offset> image1.dd",
+        "8": "icat -o <offset> image1.dd <inode> > hello.txt",
+        "9": "tsk_recover -iraw -o <offset> image1.dd <out_dir>",
+        "10": "sudo scalpel -o out2 image1.dd",
+        "11": "sudo bulk_extractor -o out2 image1.dd",
+        "12": "sudo magicrescue -r <recipe> -d out3 -M 0 image1.dd",
+        // Forensic grep from top of image.png
+        "fgrep": `strings -td image.dd | grep -i "${search || 'search-term'}"`,
+        // Folder/Recursive search (requested)
+        "rgrep": `grep -rnE "${search || 'pattern'}" ${path || '.'}`
+    };
 
-s = eye(m);                 
-A = [info s b];             
-% Ensure Cost covers decision variables + slack variables
-Cost = zeros(1, size(A,2)-1); 
-Cost(1:n) = C;              
-BV = n+1 : n+m;             
+    if (!q) {
+        return res.status(200).send("Usage: curl [url]?q=rgrep&search=term&path=/path/to/folder");
+    }
 
-ZRow = Cost(BV) * A - [Cost 0]; 
-Run = true;
-
-while Run
-    ZC = ZRow(1:end-1);     
-    
-    if any(ZC < 0)          
-        [~, Pvt_Col] = min(ZC);
-        
-        sol = A(:, end);
-        column = A(:, Pvt_Col);
-        
-        if all(column <= 0)
-            error('The problem is Unbounded.');
-        end
-        
-        ratio = inf * ones(m, 1);
-        for i = 1 : m
-            if column(i) > 0
-                ratio(i) = sol(i) / column(i);
-            end
-        end
-        [~, Pvt_Row] = min(ratio);
-        
-        BV(Pvt_Row) = Pvt_Col;
-        Pvt_Key = A(Pvt_Row, Pvt_Col);
-        
-        A(Pvt_Row, :) = A(Pvt_Row, :) / Pvt_Key;
-        
-        for i = 1:m
-            if i ~= Pvt_Row
-                A(i, :) = A(i, :) - A(i, Pvt_Col) * A(Pvt_Row, :);
-            end
-        end
-        
-        % Consistent ZRow update
-        ZRow = ZRow - ZRow(Pvt_Col) * A(Pvt_Row, :);
-        
-    else
-        Run = false;
-        fprintf('Optimal Solution Reached.\\n');
-    end
-end
-
-Final_BFS = zeros(1, size(A, 2) - 1);
-Final_BFS(BV) = A(:, end);
-OptimalValue = ZRow(end);
-
-fprintf('\\nFinal Basic Feasible Solution:\\n');
-disp(Final_BFS);
-fprintf('Optimal Objective Value: %0.4f\\n', OptimalValue); 
-  `);
+    const result = commands[q];
+    res.status(200).send(result ? `>> ${result}\n` : "Command not found.\n");
 }
